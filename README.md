@@ -15,11 +15,48 @@
 [![Vue](https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vuedotjs&logoColor=white)](apps/console-web/package.json)
 [![License](https://img.shields.io/badge/license-MIT-475569?style=flat-square)](LICENSE)
 
-[核心能力](#核心能力) · [Agent 架构](#agent-架构) · [快速开始](#快速开始) · [数据与隐私](#数据与隐私) · [文档导航](#文档导航)
+[界面预览](#界面预览) · [核心能力](#核心能力) · [Agent 架构](#agent-架构) · [快速开始](#快速开始) · [数据与隐私](#数据与隐私) · [文档导航](#文档导航)
 
 </div>
 
 ---
+
+## 界面预览
+
+以下截图来自项目真实前端，使用隔离环境中的**虚构岗位、候选人和模拟结果**，不含真实简历、公司资料、聊天记录或密钥。示例分数不代表模型效果评测。
+
+### 候选人筛选清单
+
+按观察、追问、排除归类，逐人查看简历摘要、判定理由、标准对照与待补充信息。
+
+![候选人筛选清单：虚构候选人的分类、AI 摘要与判定依据](docs/images/candidate-screening.png)
+
+<details>
+<summary><strong>岗位需求与筛选标准</strong> · 点击展开截图</summary>
+
+复用岗位预设，分别维护搜索需求与 HR 评判标准，明确必备、快速淘汰、加分与追问项。
+
+![岗位需求配置：示例岗位预设、搜索需求和 HR 评判标准](docs/images/job-preferences.png)
+
+</details>
+
+<details>
+<summary><strong>实时执行日志</strong> · 点击展开截图</summary>
+
+查看解析、判定与排名的阶段消息，可按级别、阶段或关键词筛选。
+
+![实时日志：模拟 PDF 批次从解析、判定到结果汇总的阶段记录](docs/images/workflow-logs.png)
+
+</details>
+
+<details>
+<summary><strong>综合排名与总结报告</strong> · 点击展开截图</summary>
+
+集中查看候选人优先级、匹配点和推进建议，支持 Markdown 表格展示与候选人详情展开。
+
+![综合排名：虚构候选人的排名表格、推进建议和人工复核要点](docs/images/candidate-ranking.png)
+
+</details>
 
 ## 核心能力
 
