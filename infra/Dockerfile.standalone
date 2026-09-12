@@ -1,0 +1,56 @@
+# Single-node HRagent service: Vue console + FastAPI + Playwright Chromium.
+FROM node:22-bookworm-slim AS console-build
+
+ARG NPM_REGISTRY=https://registry.npmjs.org
+
+WORKDIR /src/apps/console-web
+COPY apps/console-web/package.json apps/console-web/package-lock.json ./
+RUN npm config set registry "$NPM_REGISTRY" && npm ci
+COPY apps/console-web/ ./
+RUN npm run build
+
+# This tag provides Python 3.12 and the matching Playwright Chromium runtime.
+# Keeping them in the same image avoids a second browser download during builds.
+FROM mcr.microsoft.com/playwright/python:v1.49.0-noble
+
+ARG PIP_INDEX_URL=https://pypi.org/simple
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    DATABASE_URL=sqlite+aiosqlite:////data/recruiting.db \
+    HRAGENT_DATA_DIR=/data \
+    HRAGENT_CONFIG_PATH=/data/config/runtime.json \
+    BROWSER_PROFILE_DIR=/data/browser_profiles/hr_default \
+    HRAGENT_CONSOLE_DIST=/app/console-web/dist \
+    BROWSER_HEADLESS=true \
+    HRAGENT_FORCE_HEADLESS=1
+
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY infra/constraints.docker.txt /tmp/constraints.txt
+COPY packages/ packages/
+COPY apps/ apps/
+COPY services/ services/
+COPY alembic.ini ./
+COPY alembic/ alembic/
+
+RUN pip install --index-url "$PIP_INDEX_URL" --default-timeout 120 --retries 5 hatchling \
+    && pip install --index-url "$PIP_INDEX_URL" --default-timeout 120 --retries 5 \
+        --constraint /tmp/constraints.txt --no-build-isolation . \
+    && rm -rf /root/.cache/pip
+
+COPY --from=console-build /src/apps/console-web/dist /app/console-web/dist
+COPY infra/docker-entrypoint.sh /usr/local/bin/hragent-entrypoint
+RUN chmod 755 /usr/local/bin/hragent-entrypoint \
+    && useradd --create-home --uid 10001 hragent \
+    && mkdir -p /data/browser_profiles /data/logs /data/config \
+    && chown -R hragent:hragent /data /app
+
+USER hragent
+
+EXPOSE 8001
+
+ENTRYPOINT ["/usr/local/bin/hragent-entrypoint"]

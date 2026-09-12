@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/playwright/python:v1.49.0-jammy
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir hatchling
+
+COPY pyproject.toml README.md ./
+COPY packages packages/
+COPY apps apps/
+COPY services services/
+
+RUN pip install --no-cache-dir -e .
+
+CMD ["python", "-m", "services.fetch_worker.main"]

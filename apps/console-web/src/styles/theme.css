@@ -1,0 +1,106 @@
+:root {
+  --primary: #4a9fd9;
+  --primary-dark: #3580b8;
+  --primary-light: #e8f4fc;
+  --bg: #f0f7fc;
+  --card: #ffffff;
+  --border: #d6ebf7;
+  --text: #2c3e50;
+  --text-muted: #6b8299;
+  --success: #10b981;
+  --warn: #f59e0b;
+  --error: #ef4444;
+  --log-bg: #eaf4fb;
+  --shadow: 0 4px 20px rgba(74, 159, 217, 0.12);
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+textarea,
+input {
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  font-size: 0.95rem;
+  background: #fafdff;
+  color: var(--text);
+  resize: vertical;
+}
+
+textarea:focus,
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(74, 159, 217, 0.15);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 0.7rem 1.6rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(74, 159, 217, 0.35);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 159, 217, 0.45);
+}
+
+.btn-secondary {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  padding: 0.65rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badge-observe { background: #d1fae5; color: #065f46; }
+.badge-followup { background: #fef3c7; color: #92400e; }
+.badge-exclude { background: #f3f4f6; color: #6b7280; }
+.badge-running { background: #dbeafe; color: #1e40af; }
+.badge-done { background: #d1fae5; color: #065f46; }
+.badge-failed { background: #fee2e2; color: #991b1b; }
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}

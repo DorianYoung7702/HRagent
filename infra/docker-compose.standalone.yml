@@ -1,0 +1,39 @@
+services:
+  hragent:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.standalone
+    image: hragent/standalone:latest
+    container_name: hragent-standalone
+    restart: unless-stopped
+    init: true
+    shm_size: "1gb"
+    ports:
+      - "127.0.0.1:${HRAGENT_PORT:-8001}:8001"
+    env_file:
+      - path: ./hragent.container.env
+        required: false
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////data/recruiting.db
+      HRAGENT_DATA_DIR: /data
+      HRAGENT_CONFIG_PATH: /data/config/runtime.json
+      BROWSER_PROFILE_DIR: /data/browser_profiles/hr_default
+      HRAGENT_CONSOLE_DIST: /app/console-web/dist
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      API_HOST: 0.0.0.0
+      API_PORT: 8001
+      API_BASE_URL: http://hragent:8001
+      BROWSER_HEADLESS: "true"
+      HRAGENT_FORCE_HEADLESS: "1"
+      DEEPSEEK_TRUST_ENV: "false"
+    volumes:
+      - hragent_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"from urllib.request import urlopen; urlopen('http://127.0.0.1:8001/health', timeout=3)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+volumes:
+  hragent_data:

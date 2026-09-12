@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Workflow 详情{% endblock %}
+{% block content %}
+<h1 id="wf-name">Workflow 详情</h1>
+<div class="card" id="wf-info">加载中...</div>
+
+<div class="card">
+    <h2>操作</h2>
+    <button class="btn" onclick="triggerScreen()">触发初筛</button>
+    <button class="btn" onclick="startConversations()">启动私信会话</button>
+    <button class="btn" onclick="loadReport()">查看 HR 报告</button>
+    <button class="btn" onclick="refreshAll()">刷新</button>
+</div>
+
+<div class="card">
+    <h2>候选人列表（含初筛结果）</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>姓名</th>
+                <th>职位</th>
+                <th>城市</th>
+                <th>初筛分</th>
+                <th>等级</th>
+                <th>匹配点</th>
+                <th>缺口</th>
+            </tr>
+        </thead>
+        <tbody id="candidates-body"></tbody>
+    </table>
+</div>
+
+<div class="card" id="shortlist-section" style="display:none">
+    <h2>Shortlist / 追问列表</h2>
+    <table>
+        <thead>
+            <tr><th>排名</th><th>姓名</th><th>分数</th><th>等级</th><th>匹配点</th><th>待追问</th></tr>
+        </thead>
+        <tbody id="shortlist-body"></tbody>
+    </table>
+</div>
+
+<div class="card" id="report-section" style="display:none">
+    <h2>HR 报告</h2>
+    <pre id="report-content"></pre>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const workflowId = "{{ workflow_id }}";
+
+function levelBadge(level) {
+    const map = {
+        recommend: 'badge-green', backup: 'badge-yellow', reject: 'badge-red',
+        observe: 'badge-green', exclude: 'badge-red', followup: 'badge-yellow',
+    };
+    const labels = { observe: '观察', exclude: '排除', followup: '追问' };
+    const text = labels[level] || level || '-';
+    return `<span class="badge ${map[level] || 'badge-blue'}">${text}</span>`;
+}
+
+function scoreClass(score) {
+    if (score >= 80) return 'score-high';
+    if (score >= 60) return 'score-mid';
+    return 'score-low';
+}
+
+async function loadWorkflow() {
+    const res = await fetch(`/workflows/${workflowId}`);
+    const w = await res.json();
+    document.getElementById('wf-name').textContent = w.name;
+    const search = w.config?.fetch?.search || {};
+    document.getElementById('wf-info').innerHTML = `
+        <p><strong>状态:</strong> ${w.status}</p>
+        <p><strong>平台:</strong> ${w.platform}</p>
+        <p><strong>模式:</strong> ${search.mode || 'url_direct'}</p>
+        <p><strong>关键词:</strong> ${search.keywords || '-'}</p>
+        <p><strong>筛选:</strong> ${search.city || '-'} / ${search.experience || '-'}</p>
+        <p><strong>候选人数:</strong> ${w.config.candidate_count || '-'}</p>
+    `;
+}
+
+async function loadCandidates() {
+    const res = await fetch(`/workflows/${workflowId}/candidates`);
+    const data = await res.json();
+    document.getElementById('candidates-body').innerHTML = data.map(c => {
+        const s = c.screening || {};
+        const missing = (s.missing_info || []).map(m => m.question || m.field).join('; ');
+        return `
+        <tr>
+            <td>${c.display_name || '-'}</td>
+            <td>${c.current_title || '-'}</td>
+            <td>${c.city || '-'}</td>
+            <td class="score ${scoreClass(s.total_score)}">${s.total_score ?? '-'}</td>
+            <td>${levelBadge(s.level)}</td>
+            <td>${(s.matched_points || []).join('; ') || '-'}</td>
+            <td>${(s.gaps || []).join('; ') || missing || '-'}</td>
+        </tr>
+    `}).join('') || '<tr><td colspan="7">暂无候选人</td></tr>';
+}
+
+async function triggerScreen() {
+    await fetch(`/workflows/${workflowId}/screen`, { method: 'POST' });
+    alert('初筛已触发，请稍后刷新');
+}
+
+async function startConversations() {
+    const res = await fetch(`/conversations/start-for-shortlist/${workflowId}`, { method: 'POST' });
+    const data = await res.json();
+    alert(`已创建 ${data.conversations_started} 个会话`);
+}
+
+async function loadShortlist() {
+    try {
+        const res = await fetch(`/workflows/${workflowId}/shortlist`);
+        const data = await res.json();
+        document.getElementById('shortlist-section').style.display = 'block';
+        document.getElementById('shortlist-body').innerHTML = data.candidates.map(c => `
+            <tr>
+                <td>${c.rank}</td>
+                <td>${c.display_name || '-'}</td>
+                <td class="score ${scoreClass(c.score)}">${c.score}</td>
+                <td>${levelBadge(c.level)}</td>
+                <td>${(c.matched_points || []).join('; ')}</td>
+                <td>${(c.missing_info || []).map(m => m.question || m.field).join('; ')}</td>
+            </tr>
+        `).join('');
+    } catch(e) {}
+}
+
+async function loadReport() {
+    const res = await fetch(`/workflows/${workflowId}/report`);
+    const data = await res.json();
+    document.getElementById('report-section').style.display = 'block';
+    document.getElementById('report-content').textContent = JSON.stringify(data, null, 2);
+}
+
+function refreshAll() {
+    loadWorkflow();
+    loadCandidates();
+    loadShortlist();
+}
+
+loadWorkflow();
+loadCandidates();
+loadShortlist();
+setInterval(refreshAll, 15000);
+</script>
+{% endblock %}

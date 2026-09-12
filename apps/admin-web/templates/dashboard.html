@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}仪表盘 - 招聘 Agent 系统{% endblock %}
+{% block content %}
+<h1>招聘 Workflow 仪表盘</h1>
+<div class="card">
+    <button class="btn" onclick="loadWorkflows()">刷新</button>
+</div>
+<div class="card">
+    <table id="workflow-table">
+        <thead>
+            <tr>
+                <th>名称</th>
+                <th>平台</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="workflow-body">
+            <tr><td colspan="5">加载中...</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const statusBadge = (s) => {
+    const map = {
+        'COMPLETED': 'badge-green', 'FETCH_COMPLETED': 'badge-green',
+        'SCREENING_COMPLETED': 'badge-green', 'READY_FOR_HR': 'badge-green',
+        'FETCHING': 'badge-blue', 'SCREENING': 'badge-blue',
+        'FAILED': 'badge-red', 'PARTIAL_FAILED': 'badge-yellow',
+    };
+    return `<span class="badge ${map[s] || 'badge-yellow'}">${s}</span>`;
+};
+
+async function loadWorkflows() {
+    const res = await fetch('/workflows');
+    const data = await res.json();
+    const tbody = document.getElementById('workflow-body');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5">暂无 Workflow，请通过 API 创建</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(w => `
+        <tr>
+            <td>${w.name}</td>
+            <td>${w.platform}</td>
+            <td>${statusBadge(w.status)}</td>
+            <td>${new Date(w.created_at).toLocaleString('zh-CN')}</td>
+            <td><a class="btn btn-sm" href="/admin/workflows/${w.id}">查看</a></td>
+        </tr>
+    `).join('');
+}
+loadWorkflows();
+</script>
+{% endblock %}
